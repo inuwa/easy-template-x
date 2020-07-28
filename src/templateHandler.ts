@@ -61,14 +61,14 @@ export class TemplateHandler {
             tagParser,
             compiler: this.compiler
         };
-
-        this.options.extensions?.beforeCompilation?.forEach(extension => {
-            extension.setUtilities(extensionUtilities);
-        });
-
-        this.options.extensions?.afterCompilation?.forEach(extension => {
-            extension.setUtilities(extensionUtilities);
-        });
+        if (this.options.extensions && this.options.extensions.beforeCompilation)
+            this.options.extensions.beforeCompilation.forEach(extension => {
+                extension.setUtilities(extensionUtilities);
+            });
+        if (this.options.extensions && this.options.extensions.afterCompilation)
+            this.options.extensions.afterCompilation.forEach(extension => {
+                extension.setUtilities(extensionUtilities);
+            });
     }
 
     public async process<T extends Binary>(templateFile: T, data: TemplateData): Promise<T> {
@@ -84,13 +84,15 @@ export class TemplateHandler {
         };
 
         // extensions - before compilation
-        await this.callExtensions(this.options.extensions?.beforeCompilation, scopeData, context);
+        if (this.options.extensions)
+            await this.callExtensions(this.options.extensions.beforeCompilation, scopeData, context);
 
         // compilation (do replacements)
         await this.compiler.compile(document, scopeData, context);
 
         // extensions - after compilation
-        await this.callExtensions(this.options.extensions?.afterCompilation, scopeData, context);
+        if (this.options.extensions)
+            await this.callExtensions(this.options.extensions.afterCompilation, scopeData, context);
 
         // export the result
         return docx.export(templateFile.constructor as Constructor<T>);
